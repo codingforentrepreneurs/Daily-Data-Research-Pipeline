@@ -2,9 +2,10 @@ name: Daily YouTube Sync
 
 on:
   workflow_dispatch:
-  schedule:
-    # Runs every day at 07:00 UTC
-    - cron: "0 7 * * *"
+  # Schedule disabled — re-enable once the workflow is verified end-to-end.
+  # schedule:
+  #   # Runs every day at 07:00 UTC
+  #   - cron: "0 7 * * *"
 
 permissions:
   contents: read
