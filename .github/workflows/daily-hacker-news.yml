@@ -1,0 +1,44 @@
+name: Daily Hacker News
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 06:00 UTC
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  hacker-news:
+    runs-on: ubuntu-latest
+    env:
+      GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GHOST_NAME: "remember-me"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ghost CLI
+        run: |
+          curl -fsSL https://install.ghost.build | sh
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Ghost List
+        run: |
+          ghost list | grep "$GHOST_NAME"
+
+      - name: Install wb
+        run: |
+          curl -fsSL https://get.workbooks.dev | sh
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq postgresql-client
+
+      - name: Run hacker-news runbook
+        run: |
+          wb run runbooks/4-hacker-news.md --bail

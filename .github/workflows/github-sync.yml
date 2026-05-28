@@ -1,0 +1,44 @@
+name: My GitHub Sync
+
+# This workflow is INACTIVE by default.
+# To activate, remove the 'if: false' line on the job below.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  my-github-sync:
+    if: true  # <-- Remove this line to activate the workflow
+    runs-on: ubuntu-latest
+    env:
+      GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
+      # Use a user PAT here. The default Actions GITHUB_TOKEN is an integration
+      # token and cannot access user-scoped endpoints like /user/starred.
+      GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      GHOST_NAME: "remember-me"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ghost CLI
+        run: |
+          curl -fsSL https://install.ghost.build | sh
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Ghost List
+        run: |
+          ghost list | grep "$GHOST_NAME"
+      - name: Install wb
+        run: |
+          curl -fsSL https://get.workbooks.dev | sh
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq postgresql-client
+
+      - name: Run top-repos runbook
+        run: |
+          wb run runbooks/1-github.md --bail
