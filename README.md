@@ -1,6 +1,8 @@
-# My Remember Me - Personal Data Pipeline
+# Daily-Data-Research-Pipeline
 
-This project collects personal data from various sources and loads it into a Ghost Postgres database.
+Using GitHub Actions to automate data pulls from API services, bookmarks, etc and save them into a Ghost Postgres database.
+
+> Original project is on [here](https://github.com/codingforentrepreneurs/remember-me) with an in-depth course [on youtube](https://youtu.be/blFouj5orYo).
 
 ## Data Sources
 
