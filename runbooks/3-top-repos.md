@@ -19,7 +19,7 @@ cd "$PARENT"
 
 ### Data Config
 ```bash
-export GHOST_NAME="remember-me"
+export GHOST_NAME="ghost-research"
 export RAW_DIR="raw/github"
 export TMP_DIR="/tmp/delacruz-github"
 

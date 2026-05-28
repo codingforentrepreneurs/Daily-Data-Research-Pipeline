@@ -25,7 +25,7 @@ fi
 export TABLE_NAME="google_bookmarks"
 export CSV_PATH="$REPO_ROOT/raw/chrome/bookmarks.csv"
 export GIST_PATH="$REPO_ROOT/gists/google_bookmarks_to_csv.py"
-export GHOST_NAME="remember-me"
+export GHOST_NAME="ghost-research"
 ```
 
 ### Create Output Directories
