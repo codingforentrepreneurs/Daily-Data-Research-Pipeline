@@ -1,0 +1,69 @@
+name: Daily YouTube Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 07:00 UTC
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - id: check
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
+        run: |
+          missing=()
+          [ -z "${YOUTUBE_API_KEY:-}" ] && missing+=("YOUTUBE_API_KEY")
+          [ -z "${GHOST_API_KEY:-}" ]   && missing+=("GHOST_API_KEY")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning::Skipping sync — missing secret(s): ${missing[*]}"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  youtube-sync:
+    needs: preflight
+    if: needs.preflight.outputs.ok == 'true'
+    runs-on: ubuntu-latest
+    env:
+      GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      GHOST_NAME: "ghost-research"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Ghost CLI
+        run: |
+          curl -fsSL https://install.ghost.build | sh
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Ghost List
+        run: |
+          ghost list | grep "$GHOST_NAME"
+
+      - name: Install wb
+        run: |
+          curl -fsSL https://get.workbooks.dev | sh
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq postgresql-client
+
+      - name: Run youtube-sync runbook
+        run: |
+          wb run runbooks/5-youtube-sync.md --bail
