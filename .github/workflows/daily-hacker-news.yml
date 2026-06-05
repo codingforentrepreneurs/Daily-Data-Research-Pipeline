@@ -28,7 +28,7 @@ jobs:
       GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GHOST_NAME: ${{ vars.GHOST_NAME || 'daily-research' }}
-      HN_LOOKBACK: ${{ github.event.inputs.hn_lookback || 'today' }}
+      HN_LOOKBACK: ${{ inputs.hn_lookback || 'today' }}
 
     steps:
       - name: Checkout repository
@@ -63,4 +63,5 @@ jobs:
 
       - name: Run hacker-news runbook
         run: |
-          wb run runbooks/4-hacker-news.md --bail --set HN_LOOKBACK="$HN_LOOKBACK"
+          echo "HN_LOOKBACK=$HN_LOOKBACK"
+          wb run runbooks/4-hacker-news.md --bail
