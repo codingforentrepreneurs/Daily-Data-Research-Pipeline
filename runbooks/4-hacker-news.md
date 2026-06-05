@@ -24,6 +24,8 @@ export RAW_DIR="raw/hacker-news"
 export TMP_DIR="/tmp/delacruz-hacker-news"
 
 export HN_API_BASE="https://hacker-news.firebaseio.com/v0"
+export HN_SEARCH_API_BASE="https://hn.algolia.com/api/v1"
+export HN_LOOKBACK="${HN_LOOKBACK:-today}"
 export HN_LIMIT="100"
 export HN_IDS_JSON="$RAW_DIR/topstories_ids.json"
 export HN_ITEMS_NDJSON="$RAW_DIR/topstories_items.ndjson"
@@ -49,21 +51,85 @@ for tool in curl jq; do
 done
 ```
 
+### Choose story window
+```bash
+case "$HN_LOOKBACK" in
+  today|current|0|0d)
+    export HN_FETCH_MODE="current"
+    export HN_LOOKBACK_DAYS="0"
+    ;;
+  1d|day)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="1"
+    ;;
+  7d|1w|week)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="7"
+    ;;
+  14d|2w)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="14"
+    ;;
+  30d|month)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="30"
+    ;;
+  *d)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="${HN_LOOKBACK%d}"
+    ;;
+  *w)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="$((${HN_LOOKBACK%w} * 7))"
+    ;;
+  *)
+    echo "Unsupported HN_LOOKBACK: $HN_LOOKBACK"
+    echo "Use one of: today, 1d, 7d, 14d, 30d, or a custom value like 3d or 2w."
+    exit 1
+    ;;
+esac
+
+if ! [[ "$HN_LOOKBACK_DAYS" =~ ^[0-9]+$ ]]; then
+  echo "HN_LOOKBACK must resolve to a whole number of days."
+  exit 1
+fi
+
+export HN_NOW_TS="$(date -u +%s)"
+export HN_START_TS="$((HN_NOW_TS - (HN_LOOKBACK_DAYS * 86400)))"
+
+echo "HN_LOOKBACK=$HN_LOOKBACK"
+echo "HN_FETCH_MODE=$HN_FETCH_MODE"
+```
+
 ### Export top story IDs
 ```bash
-curl -fsSL "$HN_API_BASE/topstories.json" > "$HN_IDS_JSON"
+if [ "$HN_FETCH_MODE" = "current" ]; then
+  curl -fsSL "$HN_API_BASE/topstories.json" > "$HN_IDS_JSON"
+else
+  jq -n '[]' > "$HN_IDS_JSON"
+fi
 ```
 
 ### Export story items
 ```bash
 : > "$HN_ITEMS_NDJSON"
 
-jq -r ".[:$HN_LIMIT][]" "$HN_IDS_JSON" | while read -r HN_ID; do
-  curl -fsSL "$HN_API_BASE/item/$HN_ID.json"
-  echo
-done > "$HN_ITEMS_NDJSON"
+if [ "$HN_FETCH_MODE" = "current" ]; then
+  jq -r ".[:$HN_LIMIT][]" "$HN_IDS_JSON" | while read -r HN_ID; do
+    curl -fsSL "$HN_API_BASE/item/$HN_ID.json"
+    echo
+  done > "$HN_ITEMS_NDJSON"
 
-jq -s 'map(select(. != null))' "$HN_ITEMS_NDJSON" > "$HN_STORIES_JSON"
+  jq -s 'map(select(. != null))' "$HN_ITEMS_NDJSON" > "$HN_STORIES_JSON"
+else
+  curl -fsSLG "$HN_SEARCH_API_BASE/search" \
+    --data-urlencode "tags=story" \
+    --data-urlencode "hitsPerPage=$HN_LIMIT" \
+    --data-urlencode "numericFilters=created_at_i>=$HN_START_TS,created_at_i<=$HN_NOW_TS" \
+    > "$HN_STORIES_JSON"
+
+  jq -c '.hits[]' "$HN_STORIES_JSON" > "$HN_ITEMS_NDJSON"
+fi
 ```
 
 
@@ -84,8 +150,11 @@ done
 ### Top stories CSV
 ```bash
 jq -r '
+  def hn_id:
+    .id // .objectID;
+
   def story_url:
-    .url // ("https://news.ycombinator.com/item?id=" + (.id | tostring));
+    .url // ("https://news.ycombinator.com/item?id=" + (hn_id | tostring));
 
   def source:
     if (.url // "") == "" then
@@ -99,18 +168,18 @@ jq -r '
     "comment_count","hn_time","comments_url","fetched_at"
   ],
   (
-    to_entries[] | [
-      .value.id,
+    (if type == "array" then . else .hits end) | to_entries[] | [
+      (.value | hn_id),
       (.key + 1),
       .value.title,
       (.value | story_url),
       (.value | source),
-      .value.type,
-      .value.by,
-      .value.score,
-      .value.descendants,
-      (if .value.time then (.value.time | strftime("%Y-%m-%dT%H:%M:%SZ")) else "" end),
-      ("https://news.ycombinator.com/item?id=" + (.value.id | tostring)),
+      (.value.type // "story"),
+      (.value.by // .value.author),
+      (.value.score // .value.points),
+      (.value.descendants // .value.num_comments),
+      (if .value.time then (.value.time | strftime("%Y-%m-%dT%H:%M:%SZ")) elif .value.created_at then .value.created_at else "" end),
+      ("https://news.ycombinator.com/item?id=" + ((.value | hn_id) | tostring)),
       (now | strftime("%Y-%m-%dT%H:%M:%SZ"))
     ]
   )
