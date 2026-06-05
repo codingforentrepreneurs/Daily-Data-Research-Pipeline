@@ -20,7 +20,7 @@ Agent-generated summaries should be specific and useful. Do not use generic text
 
 ```bash
 export TRIAGE_SOURCE="${TRIAGE_SOURCE:-hn}"
-export GHOST_NAME="${GHOST_NAME:-remember-me}"
+export GHOST_NAME="${GHOST_NAME:-daily-research}"
 export TRIAGE_ACTION="${TRIAGE_ACTION:-verify}"
 export TRIAGE_LIMIT="${TRIAGE_LIMIT:-500}"
 export TRIAGE_EXPORT="${TRIAGE_EXPORT:-/tmp/triage-db.jsonl}"
