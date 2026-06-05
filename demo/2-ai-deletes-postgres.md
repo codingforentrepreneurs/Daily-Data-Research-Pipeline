@@ -5,7 +5,7 @@ runtime: bash
 
 # AI Deletes Postgres Data
 
-Use the forked Ghost database from `demo/1-fork-db.md`, drop the public tables on the fork, and prove the original `remember-me` database still has its tables and data.
+Use the forked Ghost database from `demo/1-fork-db.md`, drop the public tables on the fork, and prove the original `daily-research` database still has its tables and data.
 
 This simulates an agent making a broad destructive change while connected to a forked Postgres database instead of the source database.
 

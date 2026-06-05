@@ -19,7 +19,7 @@ cd "$PARENT"
 
 ### Data Config
 ```bash
-export GHOST_NAME="ghost-research"
+export GHOST_NAME="${GHOST_NAME:-daily-research}"
 export RAW_DIR="raw/hacker-news"
 export TMP_DIR="/tmp/delacruz-hacker-news"
 

@@ -38,7 +38,7 @@ jobs:
     env:
       GHOST_API_KEY: ${{ secrets.GHOST_API_KEY }}
       YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-      GHOST_NAME: "ghost-research"
+      GHOST_NAME: ${{ vars.GHOST_NAME || 'daily-research' }}
 
     steps:
       - name: Checkout repository

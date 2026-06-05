@@ -5,7 +5,7 @@ runtime: bash
 
 # Fork Ghost Database
 
-Fork the `remember-me` Ghost Postgres database and save the fork metadata for the next demo runbook.
+Fork the `daily-research` Ghost Postgres database and save the fork metadata for the next demo runbook.
 
 This runbook does not write a Postgres connection string to disk. It only stores Ghost database IDs in `demo/.ghost-fork.env`, which is gitignored.
 
@@ -24,8 +24,8 @@ fi
 
 ### Demo Config
 ```bash
-export GHOST_SOURCE_NAME="${GHOST_SOURCE_NAME:-remember-me}"
-export GHOST_FORK_NAME="${GHOST_FORK_NAME:-remember-me-codex-demo-$(date +%Y%m%d%H%M%S)}"
+export GHOST_SOURCE_NAME="${GHOST_SOURCE_NAME:-daily-research}"
+export GHOST_FORK_NAME="${GHOST_FORK_NAME:-daily-research-codex-demo-$(date +%Y%m%d%H%M%S)}"
 export DEMO_STATE_FILE="$REPO_ROOT/demo/.ghost-fork.env"
 ```
 
