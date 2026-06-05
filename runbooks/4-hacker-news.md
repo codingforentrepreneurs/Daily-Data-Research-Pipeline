@@ -74,6 +74,18 @@ case "$HN_LOOKBACK" in
     export HN_FETCH_MODE="historical"
     export HN_LOOKBACK_DAYS="30"
     ;;
+  90d|quarter)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="90"
+    ;;
+  365d|year|1y|1yr|1yrs)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="365"
+    ;;
+  2y|2yr|2yrs)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="730"
+    ;;
   *d)
     export HN_FETCH_MODE="historical"
     export HN_LOOKBACK_DAYS="${HN_LOOKBACK%d}"
@@ -82,9 +94,21 @@ case "$HN_LOOKBACK" in
     export HN_FETCH_MODE="historical"
     export HN_LOOKBACK_DAYS="$((${HN_LOOKBACK%w} * 7))"
     ;;
+  *y)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="$((${HN_LOOKBACK%y} * 365))"
+    ;;
+  *yr)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="$((${HN_LOOKBACK%yr} * 365))"
+    ;;
+  *yrs)
+    export HN_FETCH_MODE="historical"
+    export HN_LOOKBACK_DAYS="$((${HN_LOOKBACK%yrs} * 365))"
+    ;;
   *)
     echo "Unsupported HN_LOOKBACK: $HN_LOOKBACK"
-    echo "Use one of: today, 1d, 7d, 14d, 30d, or a custom value like 3d or 2w."
+    echo "Use one of: today, 1d, 7d, 14d, 30d, 90d, 365d, 2yrs, or a custom value like 3d, 2w, or 1y."
     exit 1
     ;;
 esac
