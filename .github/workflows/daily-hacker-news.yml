@@ -26,18 +26,27 @@ jobs:
           curl -fsSL https://install.ghost.build | sh
           echo "$HOME/bin" >> "$GITHUB_PATH"
 
-      - name: Ghost List
-        run: |
-          ghost list | grep "$GHOST_NAME"
-
-      - name: Install wb
-        run: |
-          curl -fsSL https://get.workbooks.dev | sh
-
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq jq postgresql-client
+
+      - name: Ensure Ghost database
+        run: |
+          DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id' | head -1)
+          if [ -z "$DB_ID" ]; then
+            ghost create --name "$GHOST_NAME" --wait
+            DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id' | head -1)
+          fi
+          if [ -z "$DB_ID" ]; then
+            echo "Could not find or create Ghost database: $GHOST_NAME"
+            exit 1
+          fi
+          echo "DB_ID: $DB_ID"
+
+      - name: Install wb
+        run: |
+          curl -fsSL https://get.workbooks.dev | sh
 
       - name: Run hacker-news runbook
         run: |
