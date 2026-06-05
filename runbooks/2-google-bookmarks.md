@@ -76,7 +76,17 @@ head "$CSV_PATH"
 ## Ghost Database
 
 ```bash
-export DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id')
+export DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id' | head -1)
+if [ -z "$DB_ID" ]; then
+  ghost create --name "$GHOST_NAME" --wait
+  export DB_ID=$(ghost list --json | jq -r --arg name "$GHOST_NAME" '.[] | select(.name == $name) | .id' | head -1)
+fi
+
+if [ -z "$DB_ID" ]; then
+  echo "Could not find or create Ghost database: $GHOST_NAME"
+  exit 1
+fi
+
 echo "DB_ID: $DB_ID"
 ```
 
