@@ -271,7 +271,7 @@ if [ "$TRIAGE_ACTION" = "export" ]; then
       ORDER BY $TRIAGE_ORDER
       LIMIT $TRIAGE_LIMIT
     ) src
-  ) TO STDOUT;
+  ) TO STDOUT WITH (FORMAT csv, DELIMITER E'\x02', QUOTE E'\x01', ESCAPE E'\x01');
   " > "$TRIAGE_EXPORT"
 
   echo "Exported $(wc -l < "$TRIAGE_EXPORT" | tr -d ' ') rows to $TRIAGE_EXPORT"
@@ -304,7 +304,7 @@ CREATE TEMP TABLE triage_decisions_raw (
   raw JSONB NOT NULL
 );
 
-\copy triage_decisions_raw (raw) FROM '$TRIAGE_APPLY'
+\copy triage_decisions_raw (raw) FROM '$TRIAGE_APPLY' WITH (FORMAT csv, DELIMITER E'\x02', QUOTE E'\x01', ESCAPE E'\x01')
 
 CREATE TEMP TABLE triage_applied_ids (
   id BIGINT PRIMARY KEY
